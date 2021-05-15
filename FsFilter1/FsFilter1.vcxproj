@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="wpp.cpp" />
     <ResourceCompile Include="FsFilter1.rc" />
     <ClCompile Include="FsFilter1.cpp" />
     <Inf Include="FsFilter1.inf" />
@@ -151,11 +152,21 @@
     <Link>
       <AdditionalDependencies>fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>RUN_WPP;WPPFILE="%(Filename).tmh";_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+      <WppTraceFunction>TraceEvent{FLAGS=MYDRIVER_ALL_INFO}(LEVEL, MSG, ...);</WppTraceFunction>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
       <AdditionalDependencies>fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>RUN_WPP;WPPFILE="%(Filename).tmh";_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+      <WppTraceFunction>TraceEvent{FLAGS=MYDRIVER_ALL_INFO}(LEVEL, MSG, ...);</WppTraceFunction>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
@@ -182,6 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FsFilter1.h" />
+    <ClInclude Include="Trace.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
