@@ -156,6 +156,7 @@
       <PreprocessorDefinitions>RUN_WPP;WPPFILE="%(Filename).tmh";_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WppEnabled>true</WppEnabled>
       <WppTraceFunction>TraceEvent{FLAGS=MYDRIVER_ALL_INFO}(LEVEL, MSG, ...);</WppTraceFunction>
+      <WarningLevel>Level1</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -166,6 +167,7 @@
       <PreprocessorDefinitions>RUN_WPP;WPPFILE="%(Filename).tmh";_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WppEnabled>true</WppEnabled>
       <WppTraceFunction>TraceEvent{FLAGS=MYDRIVER_ALL_INFO}(LEVEL, MSG, ...);</WppTraceFunction>
+      <WarningLevel>Level1</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
