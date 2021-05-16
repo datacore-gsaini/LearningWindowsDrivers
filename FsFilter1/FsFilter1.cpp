@@ -1,5 +1,6 @@
 #include <fltKernel.h>
 #include <dontuse.h>
+#include <ntifs.h>
 #include "FsFilter1.h"
 
 const FLT_OPERATION_REGISTRATION Callbacks[] = {
@@ -63,7 +64,7 @@ FLT_PREOP_CALLBACK_STATUS MiniPreWrite(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OB
 	UNREFERENCED_PARAMETER(FltObjects);
 	UNREFERENCED_PARAMETER(CompletionContext);
 
-	WCHAR Name[1024] = { 0 };
+	WCHAR FileName[1024] = { 0 };
 	PFLT_FILE_NAME_INFORMATION FileNameInfo;
 	NTSTATUS status;
 	status = FltGetFileNameInformation(Data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &FileNameInfo);
@@ -72,8 +73,16 @@ FLT_PREOP_CALLBACK_STATUS MiniPreWrite(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OB
 	{
 		status = FltParseFileNameInformation(FileNameInfo);
 		if (NT_SUCCESS(status)) {
-			RtlCopyMemory(Name, FileNameInfo->Name.Buffer, FileNameInfo->Name.MaximumLength);
-			KdPrint(("Filename = %ws, Length of write = %lu, Offset = %lld\n", Name, Data->Iopb->Parameters.Write.Length, Data->Iopb->Parameters.Write.ByteOffset.QuadPart));
+			RtlCopyMemory(FileName, FileNameInfo->Name.Buffer, FileNameInfo->Name.MaximumLength);
+
+			WCHAR UserName[1024] = { 0 };
+			PSecurityUserData SecData;
+			status = GetSecurityUserInfo(NULL, 0, &SecData);
+
+			if(NT_SUCCESS(status))
+				RtlCopyMemory(UserName, SecData->UserName.Buffer, SecData->UserName.MaximumLength);
+				
+			KdPrint(("Write File : User = %ws, Filename = %ws, Length of write = %lu, Offset = %lld\n", UserName, FileName, Data->Iopb->Parameters.Write.Length, Data->Iopb->Parameters.Write.ByteOffset.QuadPart));
 		}
 
 		FltReleaseFileNameInformation(FileNameInfo);
