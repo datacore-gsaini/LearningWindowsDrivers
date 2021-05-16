@@ -83,6 +83,8 @@ FLT_PREOP_CALLBACK_STATUS MiniPreWrite(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OB
 				RtlCopyMemory(UserName, SecData->UserName.Buffer, SecData->UserName.MaximumLength);
 				
 			KdPrint(("Write File : User = %ws, Filename = %ws, Length of write = %lu, Offset = %lld\n", UserName, FileName, Data->Iopb->Parameters.Write.Length, Data->Iopb->Parameters.Write.ByteOffset.QuadPart));
+			
+			LsaFreeReturnBuffer(SecData);
 		}
 
 		FltReleaseFileNameInformation(FileNameInfo);
