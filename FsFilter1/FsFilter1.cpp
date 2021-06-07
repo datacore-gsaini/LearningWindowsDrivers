@@ -159,7 +159,7 @@ FLT_PREOP_CALLBACK_STATUS MiniPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_O
             //KdPrint(("Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer));
 
             UNICODE_STRING log_line;
-            log_line.Buffer = (PWCH)ExAllocatePoolWithTag(NonPagedPool, LOG_LINE_LEN * sizeof(WCHAR), POOL_TAG);
+            log_line.Buffer = (PWCH)ExAllocatePoolWithTag(NonPagedPool, LOG_LINE_LEN * sizeof(WCHAR), POOL_TAG2);
             RtlZeroMemory(log_line.Buffer, LOG_LINE_LEN * sizeof(WCHAR));
             log_line.MaximumLength = LOG_LINE_LEN;
 
@@ -289,18 +289,22 @@ NTSTATUS MiniUnload(FLT_FILTER_UNLOAD_FLAGS Flags)
 
     RtlFreeUnicodeString(&drive_filter);
 
+    if(IsListEmpty(&log_list_head))
+        KdPrint(("Unload True\r\n"));
+    else
+        KdPrint(("Unload False\r\n"));
 
     while (!IsListEmpty(&log_list_head))
     {
-        KdPrint(("Unload Deleting list entry\r\n"));
+        KdPrint(("Unload Deleting list entry 2\r\n"));
         PLOG_ENTRY entry = PopLogEntry();
 
         if (entry != NULL)
         {
             //KdPrint(("Unload A\r\n"));
-            //ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG);
+            ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG2);
             //KdPrint(("Unload B\r\n"));
-            //ExFreePoolWithTag(entry, POOL_TAG);
+            ExFreePoolWithTag(entry, POOL_TAG);
             //KdPrint(("Unload C\r\n"));
         }
     }
