@@ -63,12 +63,12 @@ namespace FileMonitor
 
         public void Disconnect()
         {
-            ThrowIfNotConnected();
+            if (!Connected)
+                return;
+
             port.Dispose();
             port = null;
         }
-
-
 
         public void Send(string path, long op, long pid, long tid)
         {
@@ -135,5 +135,38 @@ namespace FileMonitor
             if (!Connected)
                 throw new Exception("Not Connected!!");
         }
+
+
+        public string GetLogs()
+        {
+            return SendAndRead(1);
+        }
+
+        public string SendAndRead(long op)
+        {
+            ThrowIfNotConnected();
+
+            const int bufferSize = 4096;
+            var buffer = Marshal.AllocHGlobal(bufferSize);
+
+            var size = sizeof(long);
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            try
+            {
+                Marshal.WriteInt64(ptr, 0, op);
+
+                var res = NativeMethods.FilterSendMessage(port, ptr, size, buffer, bufferSize, out IntPtr resultSize);
+                Marshal.ThrowExceptionForHR(res);
+                return Marshal.PtrToStringUni(buffer);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+        }
+
+
+
     }
 }

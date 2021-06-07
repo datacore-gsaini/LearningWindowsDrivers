@@ -51,8 +51,7 @@ void PushLogEntry(PUNICODE_STRING log_line)
     }
 }
 
-PLOG_ENTRY
-PopLogEntry()
+PLOG_ENTRY PopLogEntry()
 {
     PLIST_ENTRY ListEntry;
 
@@ -106,7 +105,8 @@ bool allowed_by_filter(PUNICODE_STRING fileName)
         LONGLONG pid = (LONGLONG)PsGetCurrentProcessId();
         if (process_id_filter != pid)
         {
-            //KdPrint(("%ws filtered out. PID %lld. Expected %lld.", fileName->Buffer, pid, process_id_filter));
+            //TraceEvent(TRACE_INFO, "%ws filtered out. PID %lld. Expected %lld \r\n", fileName->Buffer, pid, process_id_filter);
+            KdPrint(("%ws filtered out. PID %lld. Expected %lld \r\n", fileName->Buffer, pid, process_id_filter));
             return false;
         }
     }
@@ -116,7 +116,8 @@ bool allowed_by_filter(PUNICODE_STRING fileName)
         LONGLONG tid = (LONGLONG)PsGetCurrentThreadId();
         if (thread_id_filter != tid)
         {
-            //KdPrint(("%ws filtered out. TID %lld. Expected %lld.", fileName->Buffer, tid, thread_id_filter));
+            //TraceEvent(TRACE_INFO, "%ws filtered out. TID %lld. Expected %lld.", fileName->Buffer, tid, thread_id_filter);
+            KdPrint(("%ws filtered out. TID %lld. Expected %lld.", fileName->Buffer, tid, thread_id_filter));
             return false;
         }
     }
@@ -132,7 +133,8 @@ bool allowed_by_filter(PUNICODE_STRING fileName)
     if (x == 0)
         return true;
 
-    //KdPrint(("%ws filtered out. Expected %ws.\n", fileName->Buffer, drive_filter.Buffer));
+    //TraceEvent(TRACE_INFO, "%ws filtered out. Expected %ws.\n", fileName->Buffer, drive_filter.Buffer);
+    KdPrint(("%ws filtered out. Expected %ws.\n", fileName->Buffer, drive_filter.Buffer));
 
     return false;
 }
@@ -156,16 +158,22 @@ FLT_PREOP_CALLBACK_STATUS MiniPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_O
                 FltReleaseFileNameInformation(FileNameInfo);
                 return FLT_PREOP_SUCCESS_NO_CALLBACK;
             }
-            //KdPrint(("Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer));
+            KdPrint(("Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer));
 
+            /*
             UNICODE_STRING log_line;
             log_line.Buffer = (PWCH)ExAllocatePoolWithTag(NonPagedPool, LOG_LINE_LEN * sizeof(WCHAR), POOL_TAG2);
-            RtlZeroMemory(log_line.Buffer, LOG_LINE_LEN * sizeof(WCHAR));
-            log_line.MaximumLength = LOG_LINE_LEN;
 
-            RtlStringCchPrintfExW(log_line.Buffer, LOG_LINE_LEN, NULL, NULL, 0, L"Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer);
+            if (log_line.Buffer != NULL)
+            {
+                RtlZeroMemory(log_line.Buffer, LOG_LINE_LEN * sizeof(WCHAR));
+                log_line.MaximumLength = LOG_LINE_LEN * sizeof(WCHAR);
 
-            PushLogEntry(&log_line);
+                RtlStringCchPrintfExW(log_line.Buffer, LOG_LINE_LEN, NULL, NULL, 0, L"Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer);
+
+                PushLogEntry(&log_line);
+            }
+            */
         }
         FltReleaseFileNameInformation(FileNameInfo);
     }
@@ -233,8 +241,6 @@ NTSTATUS MiniSendRecv(PVOID portcookie, PVOID InputBuffer, ULONG InputBufferLeng
     ULONG dataLength;
     UNICODE_STRING dataString;
 
-
-    //command = ((PCOMMAND)InputBuffer)->OpCode;
     UNREFERENCED_PARAMETER(InputBufferLength);
 
     op_code = *((LONGLONG*)InputBuffer);
@@ -244,10 +250,25 @@ NTSTATUS MiniSendRecv(PVOID portcookie, PVOID InputBuffer, ULONG InputBufferLeng
     {
     case 1:
         KdPrint(("GetLogs\r\n"));
+        /*
+
+        if (!IsListEmpty(&log_list_head))
+        {
+            PLOG_ENTRY entry = PopLogEntry();
+
+            if (entry != NULL)
+            {
+                RtlCopyMemory(OutputBuffer, entry->PMessage->Buffer, entry->PMessage->MaximumLength);
+                *RetLength = entry->PMessage->MaximumLength;
+
+                //ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG2);
+                //ExFreePoolWithTag(entry, POOL_TAG);
+            }
+        }
+        */
+
         break;
     case 0:
-        KdPrint(("SetPath"));
-
         InputBuffer = ((LONGLONG*)InputBuffer) + 1;
         process_id_filter = *((LONGLONG*)InputBuffer);
 
@@ -288,38 +309,25 @@ NTSTATUS MiniUnload(FLT_FILTER_UNLOAD_FLAGS Flags)
         WppCleanup(WppDriverObject);
 
     RtlFreeUnicodeString(&drive_filter);
-
-    if(IsListEmpty(&log_list_head))
-        KdPrint(("Unload True\r\n"));
-    else
-        KdPrint(("Unload False\r\n"));
-
+    
+    /*
     while (!IsListEmpty(&log_list_head))
     {
-        KdPrint(("Unload Deleting list entry 2\r\n"));
+        KdPrint(("Unload Deleting list entry\r\n"));
         PLOG_ENTRY entry = PopLogEntry();
 
         if (entry != NULL)
         {
             //KdPrint(("Unload A\r\n"));
-            ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG2);
+            //ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG2);
             //KdPrint(("Unload B\r\n"));
             ExFreePoolWithTag(entry, POOL_TAG);
             //KdPrint(("Unload C\r\n"));
         }
     }
-    /*
-    
-
-    while (entry != NULL)
-    {
-        KdPrint(("Deleting list entry\r\n"));
-        ExFreePoolWithTag(entry->PMessage->Buffer, POOL_TAG);
-        ExFreePoolWithTag(entry, POOL_TAG);
-        entry = PopLogEntry();
-    }
 
     */
+   
     return STATUS_SUCCESS;
 }
 
