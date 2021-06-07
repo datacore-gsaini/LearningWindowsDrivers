@@ -1,5 +1,7 @@
 #pragma once
 
+#define POOL_TAG 'tset'
+
 FLT_POSTOP_CALLBACK_STATUS MiniPostCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects,
 	PVOID CompletionContext, FLT_POST_OPERATION_FLAGS Flags);
 

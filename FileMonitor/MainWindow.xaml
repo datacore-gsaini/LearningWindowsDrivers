@@ -5,16 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FileMonitor"
         mc:Ignorable="d"
+        Closing="Window_Closing"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="25"/>
-            <RowDefinition/>
+            <RowDefinition Height="40"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="650"/>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="50"/>
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center">
             <TextBox  Width="500" Name="txtSelectedPath">
@@ -22,12 +25,22 @@
             </TextBox>
             <Button Width="50" Name="btnBrowseFile" Click="btnBrowseFile_Click" Content="File..." />
             <Button Width="50" Name="btnBrowseDir" Click="btnBrowseDir_Click" Content="Dir..." />
-
-            <Button FontFamily="Segoe UI Symbol" Name="btnStartStop" Click="btnStartStop_Click" Padding="10 0 10 0" 
-                    Margin="30 0 0 0" Content="&#xE102;"/>
         </StackPanel>
 
-        <ScrollViewer Grid.Row="2" Margin="10 10 10 0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <StackPanel Orientation="Horizontal" Width="490" Height="25" Grid.Row="2" Grid.Column="0">
+            <TextBlock Text="Process ID" VerticalAlignment="Center"/>
+            <TextBox Name="txtProcessId" Margin="10,0,0,0" Width="50" />
+
+            <TextBlock Text="Thread ID" Margin="20,0,0,0" VerticalAlignment="Center"/>
+            <TextBox Name="txtThreadId" Margin="10,0,0,0" Width="50" />
+        </StackPanel>
+
+        <Button Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Name="btnUpdateFilter" Click="BtnUpdateFilter_Click"
+                Content="Update" Height="25" VerticalAlignment="Top" />
+        <Button Grid.Row="1" Grid.Column="2" FontFamily="Segoe UI Symbol" Name="btnStartStop" Click="btnStartStop_Click" Padding="10 0 10 0" 
+                    Content="&#xE102;"/>
+
+        <ScrollViewer Grid.Row="3" Margin="10 10 10 0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <TextBlock x:Name="tbActivity">
                 File Activity will be shown here.
             </TextBlock>

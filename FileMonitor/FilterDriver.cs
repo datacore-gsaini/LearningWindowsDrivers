@@ -4,10 +4,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileMonitor
 {
+
     class FilterDriver
     {
         private const string PORT_NAME = "\\Mini-filter";
@@ -28,11 +30,27 @@ namespace FileMonitor
             process.Start();
         }
 
+        public void StopDriver()
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "cmd.exe",
+                    Arguments = $"/C net stop FsFilter1"
+                }
+            };
+
+            process.Start();
+        }
+
         public bool Connected
         {
             get => port != null && !port.IsClosed && !port.IsInvalid;
         }
 
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public void Connect()
         {
             if (!Connected)
@@ -42,6 +60,7 @@ namespace FileMonitor
             }
         }
 
+
         public void Disconnect()
         {
             ThrowIfNotConnected();
@@ -49,42 +68,59 @@ namespace FileMonitor
             port = null;
         }
 
-        public void Send(string message)
+
+
+        public void Send(string path, long op, long pid, long tid)
+        {
+            Send(Encoding.Unicode.GetBytes(path + '\0'), op, pid, tid);
+        }
+
+
+        public void Send(byte[] data, long op, long pid, long tid)
         {
             ThrowIfNotConnected();
 
-            var size = Marshal.SizeOf(message);
-            var ptr = Marshal.AllocHGlobal(size);
+            //Send(data);
 
-            try
-            {
-                Marshal.StructureToPtr(message, ptr, false);
-                var res = NativeMethods.FilterSendMessage(port, ptr, size, IntPtr.Zero, 0, out IntPtr resultSize);
-                Marshal.ThrowExceptionForHR(res);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
-        }
-
-        public void Send(string message, string path)
-        {
-            Send(message, Encoding.Unicode.GetBytes(path + '\0'));
-        }
-
-        public void Send(string message, byte[] data)
-        {
             ThrowIfNotConnected();
 
-            var size = Marshal.SizeOf(message) + data.Length;
+            var size = sizeof(long) * 3 + data.Length;
             IntPtr ptr = Marshal.AllocHGlobal(size);
 
             try
             {
-                Marshal.StructureToPtr(message, ptr, false);
-                IntPtr address = IntPtr.Add(ptr, Marshal.SizeOf(typeof(string)));
-                Marshal.Copy(data, 0, address, data.Length);
+                IntPtr ptr2 = ptr;
+                Marshal.WriteInt64(ptr2, 0, op);
+
+                ptr2 = IntPtr.Add(ptr2, sizeof(long));
+                Marshal.WriteInt64(ptr2, 0, pid);
+
+                ptr2 = IntPtr.Add(ptr2, sizeof(long));
+                Marshal.WriteInt64(ptr2, 0, tid);
+
+                ptr2 = IntPtr.Add(ptr2, sizeof(long));
+                Marshal.Copy(data, 0, ptr2, data.Length);
+                
+                var res = NativeMethods.FilterSendMessage(port, ptr, size, IntPtr.Zero, 0, out IntPtr resultSize);
+                Marshal.ThrowExceptionForHR(res);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+
+        }
+
+        public void Send(byte[] data)
+        {
+            ThrowIfNotConnected();
+
+            var size = data.Length;
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            try
+            {
+                Marshal.Copy(data, 0, ptr, data.Length);
                 var res = NativeMethods.FilterSendMessage(port, ptr, size, IntPtr.Zero, 0, out IntPtr resultSize);
                 Marshal.ThrowExceptionForHR(res);
             }
@@ -93,7 +129,7 @@ namespace FileMonitor
                 Marshal.FreeHGlobal(ptr);
             }
         }
-      
+
         private void ThrowIfNotConnected()
         {
             if (!Connected)

@@ -150,7 +150,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <AdditionalDependencies>fltmgr.lib;%(AdditionalDependencies);Ksecdd.lib</AdditionalDependencies>
+      <AdditionalDependencies>fltmgr.lib;%(AdditionalDependencies);Ksecdd.lib;Ntstrsafe.lib;</AdditionalDependencies>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>RUN_WPP;WPPFILE="%(Filename).tmh";_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
