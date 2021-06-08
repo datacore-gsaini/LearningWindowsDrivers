@@ -27,6 +27,9 @@
     <ClCompile Include="FsFilter1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FsFilter1.rc">
@@ -35,6 +38,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FsFilter1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

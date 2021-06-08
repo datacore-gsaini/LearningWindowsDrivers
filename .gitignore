@@ -8,3 +8,6 @@ FsFilter1/x64/Bin/
 FsFilter1/Debug/
 FsFilter1/Bin/
 
+FileMonitor/.vs/
+FileMonitor/obj/
+FileMonitor/bin/
