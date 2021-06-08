@@ -8,10 +8,6 @@
 #include <stdlib.h>
 #include <ntstrsafe.h>
 
-#define STRING_LEN 128
-
-
-
 PDRIVER_OBJECT WppDriverObject = NULL;
 PFLT_PORT port = NULL, ClientPort = NULL;
 UNICODE_STRING drive_filter;
@@ -65,7 +61,7 @@ PLOG_ENTRY PopLogEntry()
 }
 
 const FLT_OPERATION_REGISTRATION Callbacks[] = {
-    {IRP_MJ_CREATE, 0, MiniPreCreate, MiniPostCreate},
+    {IRP_MJ_CREATE, 0, MiniPreCreate, NULL},
     {IRP_MJ_WRITE, 0, MiniPreWrite, NULL},
     {IRP_MJ_OPERATION_END}
 };
@@ -82,24 +78,8 @@ const FLT_REGISTRATION FilterRegistration = {
 
 PFLT_FILTER FilterHandle = NULL;
 
-
-FLT_POSTOP_CALLBACK_STATUS MiniPostCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_OBJECTS FltObjects,
-    PVOID CompletionContext, FLT_POST_OPERATION_FLAGS Flags)
-{
-    UNREFERENCED_PARAMETER(Data);
-    UNREFERENCED_PARAMETER(FltObjects);
-    UNREFERENCED_PARAMETER(CompletionContext);
-    UNREFERENCED_PARAMETER(Flags);
-
-    TraceEvent(TRACE_INFO, "Inside Post Create \r\n");
-    return FLT_POSTOP_FINISHED_PROCESSING;
-
-}
-
-
 bool allowed_by_filter(PUNICODE_STRING fileName)
 {
-
     if (process_id_filter != 0)
     {
         LONGLONG pid = (LONGLONG)PsGetCurrentProcessId();
@@ -160,6 +140,7 @@ FLT_PREOP_CALLBACK_STATUS MiniPreCreate(PFLT_CALLBACK_DATA Data, PCFLT_RELATED_O
             }
             KdPrint(("Create File. Filename = %ws \r\n", FileNameInfo->Name.Buffer));
 
+            //Below code puts the log in a linked list to be later fetched by GUI
             /*
             UNICODE_STRING log_line;
             log_line.Buffer = (PWCH)ExAllocatePoolWithTag(NonPagedPool, LOG_LINE_LEN * sizeof(WCHAR), POOL_TAG2);
@@ -233,8 +214,6 @@ VOID MiniDisconnect(PVOID Connectioncookie) {
     FltCloseClientPort(FilterHandle, &ClientPort);
 }
 
-
-
 NTSTATUS MiniSendRecv(PVOID portcookie, PVOID InputBuffer, ULONG InputBufferLength, PVOID OutputBuffer, ULONG OutputBufferLength, PULONG RetLength)
 {
     NTSTATUS status;
@@ -245,13 +224,11 @@ NTSTATUS MiniSendRecv(PVOID portcookie, PVOID InputBuffer, ULONG InputBufferLeng
 
     op_code = *((LONGLONG*)InputBuffer);
 
-
     switch (op_code)
     {
     case 1:
         KdPrint(("GetLogs\r\n"));
         /*
-
         if (!IsListEmpty(&log_list_head))
         {
             PLOG_ENTRY entry = PopLogEntry();
@@ -310,6 +287,7 @@ NTSTATUS MiniUnload(FLT_FILTER_UNLOAD_FLAGS Flags)
 
     RtlFreeUnicodeString(&drive_filter);
     
+    //Free up the entires from linked list
     /*
     while (!IsListEmpty(&log_list_head))
     {
@@ -334,7 +312,6 @@ NTSTATUS MiniUnload(FLT_FILTER_UNLOAD_FLAGS Flags)
 extern "C"
 NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
-    UNREFERENCED_PARAMETER(RegistryPath);
     PSECURITY_DESCRIPTOR sd;
     OBJECT_ATTRIBUTES oa = { 0 };
     UNICODE_STRING name = RTL_CONSTANT_STRING(L"\\Mini-filter");
@@ -375,5 +352,4 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
     FltUnregisterFilter(FilterHandle);
     RtlFreeUnicodeString(&drive_filter);
     return status;
-
 }
